@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+	</head>
+	<body>
+		<div id="app">
+			{{title}}
+			<vcomp></vcomp>
+		</div>
+		<script>
+			// 实现createApp工厂函数
+			function createAppAPI(render){
+				return function createApp (rootComponent){
+					const app = {
+						mount(rootContainer) {
+							// vnode
+							const vnode = {
+								tag: 'h2',
+								props: null,
+								children: rootComponent.data().title
+							}
+							// 渲染
+							render(vnode, rootContainer)
+						}
+					}
+					return app
+				}
+			}
+			// 创建renderer
+			const createRenderer = (options) => {
+				// 作用转换node，追加到宿主元素
+				const render = (vnode, container) => {
+					// 获取宿主
+					const parent = options.querySelector(container)
+					// 转换真实节点
+					const child = options.createElement(vnode.tag)
+					if (typeof vnode.children === 'string') {
+						child.textContent = vnode.children
+					}
+					// 追加
+					options.insert(child,parent)
+				}
+				return {
+					render,
+					createApp: createAppAPI(render)
+				}
+			}
+			// 参数是特定平台节点操作方法和属性操作方法
+			const renderer = createRenderer({
+				querySelector(selector) {
+					return document.querySelector(selector)
+				},
+				createElement(tag){
+					return document.createElement(tag)
+				},
+				insert(child,parent){
+					parent.appendChild(child)
+				}
+			})
+			
+			const Vue = {
+				createApp(options) {
+					// app实例来自于renderer.createApp(optios)
+					return renderer.createApp(options)
+				}
+			}
+			// 创建APP实例
+			Vue.createApp({
+					data() {
+						return {
+							title: 'hello vue!'
+						}
+					}
+				})
+				.mount("#app")
+		</script>
+	</body>
+</html>
